@@ -17,7 +17,7 @@ fun main() {
             .asSequence()
             .filterNot(String::isBlank)
             .chunked(3) {
-                it.map(String::toSet).reduce { acc, next -> acc.intersect(next) }
+                it.map(String::toSet).reduce(Set<Char>::intersect)
             }
             .filter { it.size == 1 }
             .map { it.single() }
