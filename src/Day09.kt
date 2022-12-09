@@ -8,15 +8,10 @@ data class Point09(val x: Int, val y: Int) {
 
 fun main() {
 
-    infix fun Point09.moveCloserTo(other: Point09) = when {
-        x == other.x && y == other.y -> this
-        x == other.x -> copy(y = y + (other.y - y).sign)
-        y == other.y -> copy(x = x + (other.x - x).sign)
-        else -> copy(
-            x = x + (other.x - x).sign,
-            y = y + (other.y - y).sign,
-        )
-    }
+    infix fun Point09.moveCloserTo(other: Point09) =
+        if (this notTouches other)
+            copy(x = x + (other.x - x).sign, y = y + (other.y - y).sign)
+        else this
 
     fun Char.asMovementVector() = when (this) {
         'R' -> Point09(1, 0)
@@ -36,8 +31,7 @@ fun main() {
             .flatMap { (direction, amount) ->
                 (0 until amount).map {
                     head += direction.asMovementVector()
-                    if (tail notTouches head)
-                        tail = tail moveCloserTo head
+                    tail = tail moveCloserTo head
                     tail
                 }
             }
@@ -55,10 +49,7 @@ fun main() {
                 (0 until amount).map {
                     knots[0] += direction.asMovementVector()
                     for (i in knots.indices.drop(1)) {
-                        val follower = knots[i]
-                        val leader = knots[i - 1]
-                        if (follower notTouches leader)
-                            knots[i] = follower moveCloserTo leader
+                        knots[i] = knots[i] moveCloserTo knots[i - 1]
                     }
                     knots.last()
                 }
