@@ -1,65 +1,47 @@
 import Monkey11.Op
-import java.util.*
-import kotlin.collections.ArrayDeque
-import kotlin.properties.Delegates.notNull
 
 fun main() {
 
-    fun parseMonkeys(input: List<String>): SortedMap<Int, Monkey11> {
-        val monkeys = sortedMapOf<Int, Monkey11>()
-        var monkeyNum: Int by notNull()
-        var items: ArrayDeque<Long> by notNull()
-        var operation: Op by notNull()
-        var test: Long by notNull()
-        var trueMonkey: Int by notNull()
-        var falseMonkey: Int by notNull()
-        for (line in input) {
-            if (line.trim().startsWith("Monkey")) {
-                monkeyNum = Regex("\\d+").find(line)!!.value.toInt()
-            } else if (line.trim().startsWith("Starting")) {
-                items = ArrayDeque(Regex("\\d+").findAll(line).map { it.value.toLong() }.toList())
-            } else if (line.trim().startsWith("Opera")) {
-                val (f, op, s) = line.split(':')[1]
+    fun parseMonkeys(input: List<String>): List<Monkey11> {
+        val digits = Regex("\\d+")
+        return buildList {
+            input.chunked(7) {
+                val (f, op, s) = it[2].split(':')[1]
                     .trim()
                     .replace("new = ", "")
                     .split(' ')
                     .filter(String::isNotBlank)
-                operation = Op(f, op, s)
-            } else if (line.trim().startsWith("Test")) {
-                test = Regex("\\d+").find(line)!!.value.toLong()
-            } else if (line.trim().startsWith("If true")) {
-                trueMonkey = Regex("\\d+").find(line)!!.value.toInt()
-            } else if (line.trim().startsWith("If false")) {
-                falseMonkey = Regex("\\d+").find(line)!!.value.toInt()
-            } else {
-                monkeys[monkeyNum] =
-                    Monkey11(items, operation, test, trueMonkey, falseMonkey, monkeys)
+                add(
+                    Monkey11(
+                        ArrayDeque(digits.findAll(it[1]).map { it.value.toLong() }.toList()),
+                        Op(f, op, s),
+                        digits.find(it[3])!!.value.toLong(),
+                        digits.find(it[4])!!.value.toInt(),
+                        digits.find(it[5])!!.value.toInt(),
+                    )
+                )
             }
         }
-        return monkeys
+            .also { all -> all.forEach { it.monkeys = all } }
     }
 
     fun part1(input: List<String>): Long {
         val monkeys = parseMonkeys(input)
-        val lcm = monkeys.values.map(Monkey11::divisor).reduce(::lcm)
         repeat(20) {
-            for ((_, monkey) in monkeys) {
-                monkey(lcm) { (it.toDouble() / 3).toLong() }
+            for (monkey in monkeys) {
+                monkey { (it.toDouble() / 3).toLong() }
             }
         }
-        return monkeys.values.map(Monkey11::processedItems).sorted().takeLast(2).map(Int::toLong).reduce(Long::times)
+        return monkeys.map(Monkey11::processedItems).sorted().takeLast(2).map(Int::toLong).reduce(Long::times)
     }
 
 
     fun part2(input: List<String>): Long {
         val monkeys = parseMonkeys(input)
-        val lcm = monkeys.values.map(Monkey11::divisor).reduce(::lcm)
         repeat(10000) {
-            for ((_, monkey) in monkeys) {
-                monkey(lcm)
-            }
+            monkeys.forEach(Monkey11::invoke)
         }
-        return monkeys.values.map(Monkey11::processedItems).sorted().takeLast(2).map(Int::toLong).reduce(Long::times)
+        return monkeys.map(Monkey11::processedItems).sorted().takeLast(2).map(Int::toLong).reduce(Long::times)
     }
 
     val testInput = readInput("Day11_test")
@@ -79,8 +61,11 @@ class Monkey11(
     val divisor: Long,
     val trueMonkey: Int,
     val falseMonkey: Int,
-    val monkeysBuyNumbers: Map<Int, Monkey11>
 ) {
+    lateinit var monkeys: List<Monkey11>
+    var processedItems = 0
+    val lcm: Long by lazy { monkeys.map(Monkey11::divisor).reduce(::lcm) }
+
     class Op(private val f: String, private val op: String, private val s: String) {
         operator fun invoke(input: Long): Long {
             val firstArg = if (f == "old") input else f.toLong()
@@ -93,14 +78,12 @@ class Monkey11(
         }
     }
 
-    var processedItems = 0
-
-    inline operator fun invoke(lcm: Long, modifier: (Long) -> Long = { it }) {
+    inline operator fun invoke(modifier: (Long) -> Long = { it }) {
         while (items.isNotEmpty()) {
             val item = items.removeFirst()
             val result = modifier(operation(item))
             val testResult = result % divisor == 0L
-            (if (testResult) monkeysBuyNumbers[trueMonkey] else monkeysBuyNumbers[falseMonkey])!!.items.add(result % lcm)
+            (if (testResult) monkeys[trueMonkey] else monkeys[falseMonkey]).items.add(result % lcm)
             processedItems++
         }
 
