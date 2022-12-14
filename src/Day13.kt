@@ -41,7 +41,6 @@ fun main() {
             .map(::ArrayDeque)
             .map(::parse)
             .sorted()
-            .map { it.also(::println) }
             .mapIndexed { index, packet ->
                 if (packet.toString() == "[[2]]" || packet.toString() == "[[6]]") index + 1
                 else 1
