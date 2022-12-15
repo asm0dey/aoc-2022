@@ -2,12 +2,12 @@ import kotlin.math.max
 import kotlin.math.min
 
 fun main() {
-    operator fun Pair<Int, Int>.rangeTo(other: Pair<Int, Int>): List<Pair<Int, Int>> {
+    operator fun Pair<Int, Int>.rangeTo(other: Pair<Int, Int>): Set<Pair<Int, Int>> {
         val minX = min(first, other.first)
         val maxX = max(first, other.first)
         val minY = min(second, other.second)
         val maxY = max(second, other.second)
-        return buildList {
+        return buildSet {
             for (i in minX..maxX) {
                 for (j in minY..maxY) {
                     add(i to j)
@@ -21,10 +21,10 @@ fun main() {
         val down = copy(second = second + 1)
         return if (!occupied.contains(down)) down
         else {
-            val downLeft = copy(second = second + 1, first = first - 1)
+            val downLeft = copy(first = first - 1, second = second + 1)
             if (!occupied.contains(downLeft)) downLeft
             else {
-                val downRight = copy(second = second + 1, first = first + 1)
+                val downRight = copy(first = first + 1, second = second + 1)
                 if (!occupied.contains(downRight)) downRight
                 else this
             }
