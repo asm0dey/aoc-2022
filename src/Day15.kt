@@ -21,7 +21,7 @@ fun main() {
     fun freeRanges(
         row: Int,
         read: List<Pair<Point15, Point15>>,
-    ): Pair<Sequence<IntRange>, Set<Point15>> {
+    ): Sequence<IntRange> {
         val beacons = hashSetOf<Point15>()
         return read
             .asSequence()
@@ -50,7 +50,7 @@ fun main() {
                     next = candidates.find { it.intersects(nextRange) }
                 }
                 return@fold result.asSequence()
-            } to beacons
+            }
     }
 
     fun inputToData(input: List<String>) = input
@@ -62,10 +62,13 @@ fun main() {
 
     fun part1(input: List<String>, row: Int): Int {
 
-        val (freeRanges, beacons) = freeRanges(row, inputToData(input))
+        val beaconsToSensors = inputToData(input)
+        val freeRanges = freeRanges(row, beaconsToSensors)
         return freeRanges
             .flatMap { range ->
-                beacons
+                beaconsToSensors
+                    .map(Pair<Point15, Point15>::first)
+                    .distinct()
                     .filter { it.y == row }
                     .map(Point15::x)
                     .flatMap(range::removePoint)
@@ -80,9 +83,9 @@ fun main() {
         return (0..row)
             .asSequence()
             .map { curRow ->
-                val toList = freeRanges(curRow, read).first.toList()
-                if (toList.size > 1) {
-                    val x = toList[0].last + 1
+                val rangeList = freeRanges(curRow, read).toList()
+                if (rangeList.size > 1) {
+                    val x = rangeList[0].last + 1
                     return@map x.toLong() * 4000000 + curRow
                 } else return@map 0
             }
