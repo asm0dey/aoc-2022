@@ -22,14 +22,12 @@ fun main() {
         row: Int,
         read: List<Pair<Point15, Point15>>,
     ): Sequence<IntRange> {
-        val beacons = hashSetOf<Point15>()
         return read
             .asSequence()
             .map { (beacon, sensor) ->
                 val dist = sensor.manhattanDistanceTo(beacon)
                 val rowDiff = abs(row - sensor.y)
                 val onTheLine = dist * 2 + 1 - 2 * rowDiff
-                beacons.add(beacon)
                 Pair(sensor.x, onTheLine)
             }
             .filterNot { it.second <= 0 }
@@ -67,12 +65,13 @@ fun main() {
         return freeRanges
             .flatMap { range ->
                 beaconsToSensors
+                    .asSequence()
                     .map(Pair<Point15, Point15>::first)
                     .distinct()
                     .filter { it.y == row }
                     .map(Point15::x)
                     .flatMap(range::removePoint)
-                    .takeIf { it.isNotEmpty() } ?: listOf(range)
+                    .takeIf(Sequence<IntRange>::any) ?: sequenceOf(range)
             }
             .map { it.also(::println) }
             .sumOf { it.last - it.first + 1 }
