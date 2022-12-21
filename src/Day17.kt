@@ -73,14 +73,15 @@ fun main() {
                     val periodicSequenceSearchLength = 20
                     if (diffs.length > periodicSequenceSearchLength * 2) {
                         val repetitions = diffs.windowed(periodicSequenceSearchLength).count {
-                            it == diffs.takeLast(
-                                periodicSequenceSearchLength
-                            )
+                            it == diffs.takeLast(periodicSequenceSearchLength)
                         }
                         if (repetitions > 1) {
                             println()
                             println("FOUND PERIODIC SEQUENCE!!!")
-                            val (start, period) = diffs.asSequence().withIndex().windowed(periodicSequenceSearchLength)
+                            val (start, period) = diffs
+                                .asSequence()
+                                .withIndex()
+                                .windowed(periodicSequenceSearchLength)
                                 .map {
                                     val foundIndex = diffs.indexOf(
                                         it.map(IndexedValue<Char>::value).joinToString(""),
@@ -99,14 +100,14 @@ fun main() {
                             val startIncrement = diffs.substring(0 until start).map(Char::digitToInt).sum()
                             println("Glass stabilization is ${start - 1} shapes")
                             println("Glass stabilization is $startIncrement height")
-                            val remainder = lastShape - (start - 1) - (numberOfRepetitions * period) - 1
+                            val remainder = lastShape - start - numberOfRepetitions * period
                             println("Tail remaining after repetitions is $remainder shapes")
                             val tailIncrement =
                                 periodicSequence.take(remainder.toInt()).map(Char::digitToInt).sum()
                             println("Its increment is $tailIncrement")
                             val totalIncrement =
-                                startIncrement.toLong() + (numberOfRepetitions * repetitionIncrement) + tailIncrement
-                            println("Total increment is ${startIncrement.toLong()} + (${numberOfRepetitions} * ${repetitionIncrement}) + $tailIncrement =  $totalIncrement")
+                                startIncrement.toLong() + numberOfRepetitions * repetitionIncrement + tailIncrement
+                            println("Total increment is $startIncrement + $numberOfRepetitions * $repetitionIncrement + $tailIncrement =  $totalIncrement")
                             return totalIncrement
                         }
                     }
